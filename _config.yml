@@ -1,0 +1,20 @@
+title: Joaquin's Blog
+email: joaquin.palma@ucsp.edu.pe
+description: My Personal Blog Site
+author: Joaquin Palma
+baseurl: ""
+url: "https://rodp63.github.io"
+
+# Social Profiles
+github_username: rodp63
+
+# Add your google-analytics ID here to activate google analytics
+google_analytics:   UA-XXXXXXXXX-X # out your google-analytics code
+
+# Build settings
+markdown: kramdown
+paginate: 5
+paginate_path: "/posts/page:num/"
+plugins:
+  - jekyll-feed
+  - jekyll-paginate

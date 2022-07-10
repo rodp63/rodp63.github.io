@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Victimización de empresas peruanas"
+title: "Victimización de empresas"
 subtitle: "Predicción de la victimización de empresas en Perú durante el año 2022"
-date: 2020-07-08
+date: 2022-07-10
 background: '/img/posts/victimizacion/victimizacion-cover.jpg'
 ---
 
@@ -166,27 +166,205 @@ a empresas, es natural que las palabras mas comunes sean "soles", "dinero", "tie
 	
 <img src="/img/posts/victimizacion/freq_words.png" alt="wordcloud" width="98%"/>
 
+De la mano con la frecuencia de las palabras, se puede aplicar el modelo de
+_Latent Dirichlet Allocation_ para encontrar los tópicos más comunes dentro del 
+_corpus_. Básicamente, un tópico representa el tema de un grupo de noticias, dividendo
+el _corpus_ en _n_ grupos. En esta ocasión, se calcularon 5 tópicos (grupos) y las 5 
+palabras que representan a cada tópico.
+
+```python
+count_vectorizer = CountVectorizer()
+count_data = count_vectorizer.fit_transform(data["normalized_text"])
+
+number_topics = 5
+number_words = 5
+
+lda = LatentDirichletAllocation(n_components=number_topics)
+lda.fit(count_data)
+
+print_topics(lda, count_vectorizer, number_words)
+
+# Topic 0: comisaría, agentes, lugar, policial, mujer
+# Topic 1: banda, penal, criminal, investigación, fiscalía
+# Topic 2: dinero, arma, fuego, soles, delincuente
+# Topic 3: tienda, agentes, celulares, comercial, robar
+# Topic 4: extorsionadores, empresa, extorsión, soles, trujillo
+```
+
 Por último, se realizó una visualización geográfica utilizando _folium_ y los datos de
 latitud y longitud obtenidos durante la preparación de datos. Se construyó un 
-[_heatmap_](/resources/heatmap.html) haciendo uso de los _plugins_ de _folium_. 
+_heatmap_ haciendo uso de los _plugins_ de _folium_.
 La visualización refleja las cifras encontradas por departamento. Donde las ciudades
 mas importantes tienen un mayor número de marcadores. Puede acceder a la 
 [visualización interactiva](/resources/heatmap.html) y descubrir los lugares con altos
-niveles de victimización de empresas.
-
+niveles de victimización de empresas y las noticias relacionadas.
 
 ## Modelamiento
 
+El objetivo del proyecto es la predicción de la cantidad de crímenes que podrían ocurrir
+en nuestra nación durante los meses de Mayo del 2022 a Diciembre del 2022.
+Ya que se trata de una serie temporal, se decidió utilizar el modelo ARIMA.
+
+Para ajustar mejor el modelo, se consideró el uso de una variable exógena que determine el
+comportamiento de la serie. Para ello, se entrenó el modelo con dos bases de datos: el
+[PBI](https://estadisticas.bcrp.gob.pe/estadisticas/series/mensuales/resultados/PN01770AM/html) 
+mensual y la
+[tasa de desempleo](https://estadisticas.bcrp.gob.pe/estadisticas/series/mensuales/resultados/PN38063GM/html)
+mensual. Se eligieron dichas variables debido a que, si la tasa de desempleo aumenta, es
+muy probable que la tasa de crimen también lo haga. De igual manera, si el PBI disminuye,
+la tasa de crimen podría aumentar.
+
+El modelo ARIMA requiere de la definición de tres parámetros:
+* orden: (p, d, q).
+* variable exógena: desempleo o PBI.
+* orden estacionario: (P, D, Q, m).
+
+Para encontrar los valores óptimos se ejecutó el método de _Cross Validation_ y las
+gráficas de diferenciación, auto-correlación y auto-correlación parcial.
+Una vez encontrados dichos valores, se entrenó el modelo con los datos de entrenamiento.
+
+```python
+# Mejores valores obtenidos por Cross Validation
+best_order = (2,1,0)
+best_exog = "unemployment"
+best_seasonal_order = (1,0,0,12)
+
+# Construcción del modelo
+best_model = ARIMA(
+  train_data["count"],
+  exog=train_data[best_exog],
+  order=best_order,
+  seasonal_order=best_seasonal_order
+)
+best_model_fit = best_model.fit()
+```
+
+Una vez ajustado el modelo, se pudo realizar el _forecasting_ de los meses siguientes.
+Los datos de prueba son los primeros 4 meses del 2022. Si graficamos los datos actuales
+y los valores conseguidos por el modelo, observamos que la coincidencia es alta.
+
 <img src="/img/posts/victimizacion/modelling.png" alt="model" width="95%"/>
+
+Se calculó el error cuadrado medio luego de aplicar el modelo a los datos de prueba.
+Dicho valor debe acercarse a cero y nos indica qué tan bien se pudo modelar el comportamiento
+temporal de la serie.
+
+```python
+total_score = mean_squared_error(
+  final_df["count"], final_df["predicted"]
+)
+print(total_score)
+# 22.26480087584455
+```
 
 ### Elaborando predicciones
 
+Ahora que tenemos el modelo que configura el número de crímenes a empresas en Perú,
+podemos predecir cuántos crímenes podrían ocurrir en los próximos meses. Para ello, 
+necesitamos predecir primero la tasa de desempleo con los datos actuales, ya que este
+valor es la variable exógena del modelo principal.
+
+Se utilizó también ARIMA para modelar el comportamiento de la tasa de desempleo,
+utilizando las gráficas de auto-correlación y diferenciación, se definieron los valores
+de los parámetros y se construyó el siguiente modelo.
+
+```python
+# Construcción del modelo
+unemployment_model = ARIMA(
+  unemployment_serie, order=(1,1,1), seasonal_order=(1,1,0,12)
+)
+unemployment_model_fit = unemployment_model.fit()
+
+# Forecasting
+fc = unemployment_model_fit.forecast(steps=8, alpha=0.05)
+```
+
+Aplicando el método _forecast_, se obtuvieron los siguientes valores que predicen
+la tasa de desempleo hasta el mes de diciembre del 2022.
+
+<img src="/img/posts/victimizacion/unemployment.png" alt="unemployment" width="93%"/>
+
+Ahora que contamos con los valores de desempleo, podemos usarlos como variables exógenas
+del modelo de victimización. Aplicando el método de _forecast_ y márgenes de error,
+obtenemos la siguiente visualización final.
+
 <img src="/img/posts/victimizacion/prediction.png" alt="prediction" width="95%"/>
 
+Lo cual nos indica qué, a nivel nacional, durante los próximos meses ocurrirán
+la siguiente cantidad de eventos de victimización a empresas.
+
+```python
+final_model_fit.forecast(8, exog=fc).round()
+# ----------------------
+# | Date        | Freq |
+# ----------------------
+# | 2022-05-01  | 55.0 |
+# | 2022-06-01  | 57.0 |
+# | 2022-07-01  | 60.0 |
+# | 2022-08-01  | 55.0 |
+# | 2022-09-01  | 57.0 |
+# | 2022-10-01  | 62.0 |
+# | 2022-11-01  | 62.0 |
+# | 2022-12-01  | 63.0 |
+# ----------------------
+```
 
 ## Conclusiones y trabajos futuros
 
+Gracias a la metodología aplicada, se pudo predecir exitosamente el número de crímenes
+a empresas que podrían ocurrir en nuestro país durante el año 2022, cumpliendo el objetivo
+del proyecto de ciencia de datos. En cuanto a los _insights_, los más interesantes fueron 
+los siguientes:
 
+* La determinación de las regiones con un mayor número de eventos de victimización: Si bien
+  Lima, Piura y La Libertad son los departamentos con el mayor número de incidencias, las 
+  regiones con el mayor _ratio_ de crimen por número de pobladores son Tumbes, Tacna y
+  Moquegua.
+
+* Los tópicos más comunes de las noticias recopiladas: Las noticias pueden clasificarse
+  dentro de 5 grandes grupos representados por 5 palabras. Además, las palabras que
+  resaltan se interceptan con las más relevantes de los modelos _bag of words_ y _wordcloud_.
+  De entre todos estos modelos, destacan las palabras "dinero", "comisaria", "banda", 
+  "tienda" y "extorsión".
+  
+* Mapa de calor de la geo-localización de las noticias: La elaboración de dicho mapa
+  interactivo nos permitió apreciar la distribución geográfica de los lugares donde se
+  presentan mas delitos contra empresas. Verificando que las zonas urbanas y céntricas son 
+  las más peligrosas para las empresas y negocios.
+
+En cuanto a las etapas del proyecto, el uso de _web scraping_ permitió la recopilación
+rápida y flexible de datos. Por otra parte, fue adecuado trabajar con _python_ y _pandas_
+por el volumen de los datos y la sencillez de las consultas. Además, existen muchas
+librerías de ciencia de datos y estadística que nos ayudaron a abordar el objetivo del
+proyecto de forma eficiente.
+
+Como trabajos futuros, podrían probarse otros modelos de _forecasting_ para abordar la
+predicción del número de eventos de victimización a empresas, por ejemplo, modelos de
+_machine learning_ supervisados y redes neuronales. En cuanto a la visualización, la
+elaboración de un _choropleth map_ podría ser de gran ayuda para observar la frecuencia de
+crímenes por departamentos, e inclusive por provincias.
 
 ## Referencias
 
+* Gómez, E. (2022) _Course Notebooks and Slides_. Universidad Catolica San Pablo: Arequipa, 
+  Perú.
+  
+* Lao, R (2018) _A Beginner’s Guide to the Data Science Pipeline_ [online] disponible en:
+  [_https://towardsdatascience.com/a-beginners-guide-to-the-data-science-pipeline-a4904b2d8ad3_](https://towardsdatascience.com/a-beginners-guide-to-the-data-science-pipeline-a4904b2d8ad3)
+  
+* Prabhakaran, S. (2021) _ARIMA Model – Complete Guide to Time Series Forecasting in Python_
+  [online] disponible en:
+  [https://www.machinelearningplus.com/time-series/arima-model-time-series-forecasting-python/](https://www.machinelearningplus.com/time-series/arima-model-time-series-forecasting-python/)
+  
+* Scrapy Developers (2022) _Scrapy 2.6 documentation_ [online] disponible en:
+  [ https://docs.scrapy.org/en/latest_](https://docs.scrapy.org/en/latest/)
+  
+* Pandas Development Team (2022) _Pandas documentation_ [online] disponible en: 
+  [_https://pandas.pydata.org/docs_](https://pandas.pydata.org/docs)
+  
+* Scikit-learn developers (2022) _User Guide_ [online] disponible en:
+  [_https://scikit-learn.org/stable/user_guide.html_](https://scikit-learn.org/stable/user_guide.html)
+  
+* Perktold, J.; Seabold, S.; Taylor, J.; statsmodels developers (2022) _User Guide_ [online]
+  disponible en:
+  [_https://www.statsmodels.org/stable/user-guide.html_](https://www.statsmodels.org/stable/user-guide.html)

@@ -16,17 +16,17 @@ La victimización de empresas es un problema latente en la sociedad peruana, dí
 escuchamos en los medios de comunicación noticias de robos y asaltos a establecimientos
 comerciales. Si bien la capital Lima tiene un mayor número de incidencias, los demás
 departamentos no son ajenos a este problema social. De hecho, un estudio realizado por el
-INEI en año 2018 demostró qué, durante setiembre del 2017 y agosto del 2018, 28 de cada 100
-empresas fueron víctimas de al menos un hecho delictivo. 
+INEI en el año 2018 demostró qué, durante setiembre del 2017 y agosto del 2018, 28 de cada 100
+empresas fueron víctimas de al menos un hecho delictivo.
 
-La violencia compromete el crecimiento económico del país, no sólo afecta directamente a
+La violencia impacta en el crecimiento económico del país, no sólo afecta directamente a
 la población económicamente activa, sino que disminuye los incentivos directos para invertir,
 así como los incentivos gubernamentales que se desvían para reforzar políticas de seguridad y
 control. Motivado por este contexto, se realizó un estudio de ciencia de datos sobre la 
 victimización de empresas peruanas, intentando modelar su comportamiento para poder predecir 
-el numero de delitos que podrían ocurrir durante el año 2022.
+el número de delitos que podrían ocurrir durante el año 2022.
 
-Para abordar este proyecto se elaboro una solución basada en ciencia de datos, desde el
+Para abordar este proyecto se elaboró una solución basada en ciencia de datos, desde el
 proceso de recolección de datos, hasta el modelamiento temporal de los eventos de
 victimización. Sin mayor preámbulo, repasemos cada una de estas etapas.
 
@@ -53,7 +53,7 @@ seguido fue el siguiente:
   _posts_ durante ese rango de tiempo.
   
 * Una vez obtenidos los _responses_, se realiza un filtro por _keywords_ de victimización,
-  e.g. robo, asalto, ladrones. Para realizar el _match_ se eliminan los _stop words_ del
+  e.g. robo, asalto, ladrones, etc. Para realizar el _match_ se eliminan los _stop words_ del
   texto y se aplica _stemming_ para eliminar ambigüedades léxicas.
   
 * Ahora que tenemos noticias sobre victimización, debemos realizar un filtro adicional,
@@ -61,10 +61,10 @@ seguido fue el siguiente:
   al API, ahora se envían al sitio web donde se encuentra la redacción completa de la noticia.
   
 * El proceso de filtrado es similar al anterior, ahora se buscan _keywords_ relacionadas
-  a empresas, e.g. negocio, comercio, joyería. Una vez filtradas las noticias, se guardan
+  a empresas, e.g. negocio, comercio, joyería, etc. Una vez filtradas las noticias, se guardan
   los campos más importantes usando selectores. Los campos guardados por cada noticia 
   fueron: _url_, _date_, _title_, _summary_, _body_ y _score_. Este último campo indica 
-  qué tan seguro es   que dicha noticia efectivamente se trate de la victimización a una
+  qué tan seguro es que dicha noticia efectivamente se trate de la victimización a una
   empresa.
   
 * Finalmente, todos los _items_ son exportados en formato CSV. Con el método propuesto se
@@ -78,8 +78,8 @@ los siguientes pasos:
 
 <img src="/img/posts/victimizacion/cleaning_pipeline.png" alt="pipeline" width="95%"/>
 
-* Se lee el archivo CSV obtenido mediante _web scraping_ usando la librería _pandas_, los
-  datos se representan como un _DataFrame_. Adicionalmente, para encontrar la ubicación
+* Se lee el archivo CSV obtenido mediante _web scraping_ usando la librería _pandas_, por ende,
+  los datos se representan como un _DataFrame_. Adicionalmente, para encontrar la ubicación
   de las noticias, se utilizó la siguiente 
   [base de datos](https://www.datosabiertos.gob.pe/dataset/c%C3%B3digo-de-ubicaci%C3%B3n-geogr%C3%A1fica-en-el-per%C3%BA-instituto-nacional-de-estad%C3%ADstica-e-inform%C3%A1tica)
   que contiene la información de todos los distritos de Perú.
@@ -94,7 +94,8 @@ los siguientes pasos:
   un distrito está presente en la noticia y es diferente al nombre de la provincia, entonces
   tiene mayor relevancia. Otro criterio es la ubicación dentro de la noticia, si el lugar
   está presente en el título tiene mayor relevancia que un lugar dentro del cuerpo.
-  Los resultados fueron muy positivos y precisos, aquí un ejemplo del campo resultante:
+  Los resultados fueron muy alentadores, con pocos falsos positivos, aquí un ejemplo del campo 
+  resultante:
   
   <img src="/img/posts/victimizacion/df.png" alt="freq" width="95%"/>
   
@@ -115,8 +116,8 @@ los siguientes pasos:
   )
   ```
   
-* Finalmente se guardan los datos limpios y geo-localizados, logrando obtener 3670 noticias,
-  aquellas que no obtuvieron una ubicación fueron eliminadas de la base de datos.
+* Finalmente, se guardan los datos limpios y geo-localizados, logrando obtener 3670 noticias.
+  Aquellas que no obtuvieron una ubicación fueron eliminadas de la base de datos.
 
 ## Visualización y exploración de datos
 
@@ -130,9 +131,10 @@ mayor población presentan un mayor número de ocurrencias.
 
 Sin embargo, estas cifras no reflejan el nivel de inseguridad de cada departamento. El
 _ratio_ de victimización por cantidad de habitantes presenta una mejor visualización de
-las incidencias criminales. Para ello, se consiguió una base de datos con la población
-de cada región del Perú, haciendo la división correspondiente, obtenemos los siguientes
-valores.
+las incidencias criminales. Para ello, se consiguió una 
+[base de datos](https://www.datosabiertos.gob.pe/dataset/poblaci%C3%B3n-peru)
+con la población de cada distrito del Perú, haciendo la división correspondiente, obtenemos 
+los siguientes valores.
 
 <center>
 	<img src="/img/posts/victimizacion/dep_rate.png" alt="freq" width="80%"/>
@@ -140,7 +142,7 @@ valores.
 
 Algunos departamentos mantienen sus posiciones, y algunos cambian considerablemente.
 Gracias al gráfico de barras, podemos determinar que Tumbes, Tacna, Moquegua, Piura y 
-Lambayeque son las cinco regiones cuyas empresas sufren de un mayor nivel de victimización
+Lambayeque son las cinco regiones cuyas empresas sufren de un mayor grado de victimización
 por número de habitantes durante los últimos 7 años.
 
 Otro gráfico interesante es el número de hechos delictivos por mes. La frecuencia de crimen
@@ -151,10 +153,10 @@ por unidad de tiempo puede apreciarse en la siguiente visualización.
 </center>
 
 Estos datos indican cierta estacionalidad anual en los datos, además, los meses de
-Abril, Julio y Noviembre presentan los picos más altos. Un hecho interesante es la 
+abril, julio y noviembre presentan los picos más altos. Un hecho interesante es la 
 reducción considerable de crimen tras la declaración de cuarentena en marzo del 2020.
-No obstante, durante el año 2021 y lo que va del 2022 los valores han ido volviendo
-a su comportamiento pre-pandemia.
+No obstante, durante el año 2021 y lo que va del 2022 los valores retoman su 
+comportamiento pre-pandemia.
 
 Los _wordclouds_ y _bag of words_ son modelos que representan la frecuencia de palabras
 de forma visual y numérica respectivamente. El modelo de _wordcloud_ toma en cuenta
@@ -168,7 +170,7 @@ a empresas, es natural que las palabras mas comunes sean "soles", "dinero", "tie
 
 De la mano con la frecuencia de las palabras, se puede aplicar el modelo de
 _Latent Dirichlet Allocation_ para encontrar los tópicos más comunes dentro del 
-_corpus_. Básicamente, un tópico representa el tema de un grupo de noticias, dividendo
+_corpus_. Básicamente, un tópico representa el tema de un grupo de noticias, dividiendo
 el _corpus_ en _n_ grupos. En esta ocasión, se calcularon 5 tópicos (grupos) y las 5 
 palabras que representan a cada tópico.
 
@@ -202,7 +204,7 @@ niveles de victimización de empresas y las noticias relacionadas.
 ## Modelamiento
 
 El objetivo del proyecto es la predicción de la cantidad de crímenes que podrían ocurrir
-en nuestra nación durante los meses de Mayo del 2022 a Diciembre del 2022.
+en nuestro país durante los meses de mayo del 2022 a diciembre del 2022.
 Ya que se trata de una serie temporal, se decidió utilizar el modelo ARIMA.
 
 Para ajustar mejor el modelo, se consideró el uso de una variable exógena que determine el
@@ -261,8 +263,8 @@ print(total_score)
 
 Ahora que tenemos el modelo que configura el número de crímenes a empresas en Perú,
 podemos predecir cuántos crímenes podrían ocurrir en los próximos meses. Para ello, 
-necesitamos predecir primero la tasa de desempleo con los datos actuales, ya que este
-valor es la variable exógena del modelo principal.
+necesitamos predecir primero la tasa de desempleo con los datos actuales, ya que dichos
+valores representan la variable exógena del modelo principal.
 
 Se utilizó también ARIMA para modelar el comportamiento de la tasa de desempleo,
 utilizando las gráficas de auto-correlación y diferenciación, se definieron los valores
@@ -309,6 +311,14 @@ final_model_fit.forecast(8, exog=fc).round()
 # ----------------------
 ```
 
+Podemos observar que las cifras van en aumento, superando lamentablemente los números de 
+los últimos 4 años. Si bien existen muchos factores que afectan el grado de crimen a 
+las empresas peruanas, la tasa de desempleo ha demostrado ser un buen indicador del
+aumento o disminución de la victimización. Explicar el porqué de los valores de desempleo
+es un tema muy interesante que involucra conocimientos de economía, política y el análisis
+de más fuentes de datos. Sin embargo, dicho abordaje no forma parte del alcance de este 
+proyecto.
+
 ## Conclusiones y trabajos futuros
 
 Gracias a la metodología aplicada, se pudo predecir exitosamente el número de crímenes
@@ -335,10 +345,10 @@ los siguientes:
 En cuanto a las etapas del proyecto, el uso de _web scraping_ permitió la recopilación
 rápida y flexible de datos. Por otra parte, fue adecuado trabajar con _python_ y _pandas_
 por el volumen de los datos y la sencillez de las consultas. Además, existen muchas
-librerías de ciencia de datos y estadística que nos ayudaron a abordar el objetivo del
-proyecto de forma eficiente.
+librerías de ciencia de datos y estadística que ayudaron en el abordaje del proyecto de 
+forma eficiente.
 
-Como trabajos futuros, podrían probarse otros modelos de _forecasting_ para abordar la
+Como trabajos futuros, podrían probarse otros modelos de _forecasting_ para estudiar la
 predicción del número de eventos de victimización a empresas, por ejemplo, modelos de
 _machine learning_ supervisados y redes neuronales. En cuanto a la visualización, la
 elaboración de un _choropleth map_ podría ser de gran ayuda para observar la frecuencia de

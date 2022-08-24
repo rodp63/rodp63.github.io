@@ -356,7 +356,7 @@ crímenes por departamentos, e inclusive por provincias.
 
 ## Referencias
 
-* Gómez, E. (2022) _Course Notebooks and Slides_. Universidad Catolica San Pablo: Arequipa, 
+* Gómez, E. (2022) _Course Notebooks and Slides_. Universidad Católica San Pablo: Arequipa, 
   Perú.
   
 * Lao, R (2018) _A Beginner’s Guide to the Data Science Pipeline_ [online] disponible en:
